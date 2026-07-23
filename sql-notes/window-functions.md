@@ -55,22 +55,48 @@ WITH ranked_orders AS (
 
 ## RANK / DENSE_RANK
 
-**Q:**
+**Q:** 每个分类中单价最高的交易是哪些？
 
 ```sql
-
+WITH ranked_orders AS(
+  SELECT *, RANK() OVER (
+    PARTITION BY category
+    ORDER BY amount DESC) AS rank
+  FROM orders
+  )
+ SELECT * FROM ranked_orders
+ WHERE rank = 1
 ```
 
-**When to use:**
+**Q:** 所有交易中金额Top5的交易是哪些？
+
+```sql
+WITH top5 AS(
+  SELECT *, RANK() OVER (
+    ORDER BY amount DESC) AS rank
+  FROM orders
+  )
+SELECT * FROM top5
+WHERE rank < 6
+```
+
+**When to use:** 分组内第N条，最高，topN
 
 ---
 
 ## LAG
 
-**Q:**
+**Q:** 算出每个店铺销售额的前月比
 
 ```sql
-
+with ordered_sales As(
+SELECT shop_name, year, month, sales, LAG(sales) OVER(
+  PARTITION BY shop_name
+  order by year, month) AS sales_lag
+FROM sales
+  )
+SELECT *, ROUND(sales*1.0/sales_lag,2) AS sales_ratio
+FROM ordered_sales
 ```
 
 **When to use:** 前月比・前年同月比。
@@ -79,13 +105,37 @@ WITH ranked_orders AS (
 
 ## LEAD
 
-**Q:**
+**Q:** 算出所有店铺2025年每个月销售额的前年同月的增长率(这个例子不是很好)
 
 ```sql
-
+with ordered_sales As(
+SELECT shop_name, year, month, sales, LEAD(sales) OVER(
+  PARTITION BY shop_name, month
+  order by year) AS sales_lead
+FROM sales
+  )
+SELECT *, ROUND((sales_lead/(sales*1.0)-1), 2) AS sales_ratio
+FROM ordered_sales
 ```
 
-**When to use:**
+**Q:** 算出用户第一次购买后过了多久之后会下第二单
+
+```SQL
+WITH new_order AS (
+SELECT *, LEAD(order_date) OVER(
+  PARTITION BY user_id
+  order BY order_date, order_id) AS next_od,
+  RANK() OVER (
+    PARTITION BY user_id
+    order BY order_date, order_id) AS rank
+FROM orders
+  )
+SELECT user_id, order_date, next_od, julianday(next_od) - julianday(order_date) AS time_span
+FROM new_order
+WHERE rank = 1
+```
+
+**When to use:** 复购率，购买间隔，股票价格变化
 
 ---
 
