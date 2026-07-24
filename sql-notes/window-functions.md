@@ -141,10 +141,24 @@ WHERE rank = 1
 
 ## 移動平均
 
-**Q:**
+**Q:**　3个月内的平均销售额
 
 ```sql
-
+SELECT *,  AVG(sales) OVER(
+  PARTITION BY shop_name
+  ORDER BY year, month
+  ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS avg_sales
+FROM sales
 ```
 
-**When to use:**
+**Q** 从开业到当前月的平均销售额
+
+```sql
+SELECT *,  AVG(sales) OVER(
+  PARTITION BY shop_name
+  ORDER BY year, month
+  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS avg_sales
+FROM sales
+```
+
+**When to use:** 日销售额的7日移动平均(平滑掉星期波动)，一周内的平均气温，几个月内的平均销售额
