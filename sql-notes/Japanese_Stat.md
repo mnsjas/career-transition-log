@@ -1,8 +1,8 @@
 ## 日本国税調査　
 
-**Q** 1995から2020年まで女性就業者数増長が一番多い産業ランキング
+**Q:** 1995から2020年まで女性就業者数増長が一番多い産業ランキング
 
-**A1**
+**A1:** FIRST_VALUE
 
 ```sql
 WITH all_year AS(
@@ -18,7 +18,7 @@ WHERE time_code =2020000000
 ORDER BY growth DESC
 ```
 
-**A2**
+**A2:** 条件聚合
 
 ```sql
 SELECT col_4, 
@@ -29,8 +29,8 @@ GROUP BY col_4
 ORDER BY growth DESC
 ```
 
-**When to use** 把不同年份/类别横向拉平来对比
+**When to use:** 把不同年份/类别横向拉平来对比
 
-**Note**
+**Note:** 
 FIRST_VALUE vs 条件聚合两种写法
 GROUP BY 不放裸列(不要SELECT time_code)
