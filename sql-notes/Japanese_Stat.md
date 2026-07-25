@@ -8,20 +8,20 @@
 WITH all_year AS(
 SELECT cat01_code, col_4, time_code, value, value - FIRST_VALUE(value) OVER(
   PARTITION BY cat01_code
-  ORDER BY time_code) AS value_diff
+  ORDER BY time_code) AS growth
 FROM employment
 WHERE tab_code = 334 AND cat02_code = 120 
 )
 
 SELECT * FROM all_year
 WHERE time_code =2020000000
-ORDER BY value_diff DESC
+ORDER BY growth DESC
 ```
 
 **A2**
 
 ```sql
-SELECT col_4, time_code,
+SELECT col_4, 
 	MAX(CASE WHEN time_code = 2020000000 THEN value END) - MAX(CASE WHEN time_code = 1995000000 THEN value END) AS growth
 FROM employment
 WHERE tab_code = 334 AND cat02_code = 120 
