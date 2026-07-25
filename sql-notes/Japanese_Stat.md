@@ -30,3 +30,7 @@ ORDER BY growth DESC
 ```
 
 **When to use** 把不同年份/类别横向拉平来对比
+
+**Note**
+FIRST_VALUE vs 条件聚合两种写法
+GROUP BY 不放裸列(不要SELECT time_code)
