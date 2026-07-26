@@ -17,7 +17,7 @@ FROM(
   PARTITION BY age
   ORDER BY num DESC) AS rank
   FROM favorite_coffee) t
-WHERE t.rank <6
+WHERE t.rank <= 5
 ORDER BY CASE age
 	WHEN '<18 years old' THEN 1
     WHEN '18-24 years old' THEN 2
