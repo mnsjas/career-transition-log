@@ -30,3 +30,6 @@ ORDER BY CASE age
  END, num DESC
 ```
 
+**Notes:**
+- 文本类别要按语义顺序排 → ORDER BY CASE 列 WHEN ... THEN 数字 END(自定义排序)
+- Top N 分组排名 → RANK / DENSE_RANK / ROW_NUMBER 三选一,区别在怎么处理并列
