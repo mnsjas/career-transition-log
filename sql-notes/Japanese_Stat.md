@@ -32,8 +32,9 @@ ORDER BY growth DESC
 **When to use:** 把不同年份/类别横向拉平来对比
 
 **Note:** 
-FIRST_VALUE vs 条件聚合两种写法
-GROUP BY 不放裸列(不要SELECT time_code)
+- FIRST_VALUE vs 条件聚合两种写法
+- GROUP BY 不放裸列(不要SELECT time_code)
+
 
 ### Q2:2020年の各産業の従業者数の女性/男性比率を算出
 
