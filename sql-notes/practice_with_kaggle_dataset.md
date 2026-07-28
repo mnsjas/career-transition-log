@@ -93,3 +93,81 @@ ORDER BY age;
 - 「CASE 映射前,先 SELECT DISTINCT 确认所有值都被覆盖,否则漏的变NULL被悄悄丢掉」
 - 「算组内占比 → SUM(COUNT(*)) OVER (PARTITION BY 组),比 JOIN 子查询简洁」
 - 「JOIN 类型传递意图,同源等价时用 INNER/LEFT,别用 RIGHT 让人困惑」
+
+### Q3: Coffee preference (Favorite coffee styles, Roast level, Flavor, with or without suger) by races
+
+**Answer1:**
+```sql
+SELECT DISTINCT ethnicity_race 
+FROM  Coffee
+
+DROP TABLE IF EXISTS coffee_preferences;
+CREATE table coffee_preferences AS
+  SELECT favorite, sweetener, style, roast_level, ethnicity_race
+  FROM Coffee
+  WHERE ethnicity_race <>'NA';
+
+SELECT * 
+FROM coffee_preferences 
+LIMIT 20
+
+with favorite_count AS (
+  SELECT ethnicity_race, favorite, COUNT(*) AS num
+  from coffee_preferences
+  group by ethnicity_race, favorite),
+
+favorite_rank AS (
+SELECT 
+	ethnicity_race, 
+    favorite, 
+	ROW_NUMBER() OVER(
+      PARTITION BY ethnicity_race
+      ORDER BY num DESC) as rank
+FROM favorite_count)
+
+SELECT 
+	r1.ethnicity_race, 
+	r1.favorite AS first, 
+    r2.favorite as second, 
+    r3.favorite as third
+FROM favorite_rank r1
+inner join favorite_rank r2
+inner join favorite_rank r3
+ON r1.ethnicity_race = r2.ethnicity_race
+AND r2.ethnicity_race = r3.ethnicity_race
+WHERE r1.rank = 1 
+AND r2.rank = 2
+and r3.rank = 3
+```
+
+**Answer2:**
+
+```sql
+with favorite_count AS (
+  SELECT ethnicity_race, favorite, COUNT(*) AS num
+  from coffee_preferences
+  group by ethnicity_race, favorite),
+
+favorite_rank AS (
+SELECT 
+	ethnicity_race, 
+    favorite, 
+	ROW_NUMBER() OVER(
+      PARTITION BY ethnicity_race
+      ORDER BY num DESC) as rank
+FROM favorite_count)
+
+SELECT ethnicity_race,
+	MAX(case when rank = 1 then favorite end) as first,
+    MAX(case when rank = 2 then favorite end) as second,
+	MAX(case when rank = 3 then favorite end) as third
+FROM favorite_rank
+group by ethnicity_race
+```
+
+**Notes:**
+- CREATE TABLE の文末に ; を付けて、次の SELECT を別のSQL文として実行します
+- GROUP BY の不足に気を付けろ
+- 同じSELECT句で付けた別名を参照できないので、CTEを使おう
+- SQLの実行順序はFROM、WHERE、GROUP BY、集約関数、SELECT、ウィンドウ関数（ROW_NUMBER() や RANK()）、ORDER BY
+- 取组内Top-N并排成列:自连接会在凑不齐N个时静默丢整组;条件聚合 MAX(CASE WHEN rank=n) 会保留行、缺的显示NULL —— 后者更安全
