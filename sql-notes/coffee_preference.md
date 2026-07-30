@@ -1,8 +1,8 @@
 ## Analysis with Coffee Taste Test Survey Dataset
 
-### Q1: Top5 Favotate coffee styles by age group
+### Q1: Top3 Favotate coffee styles by age group
 
-**Answer:**
+**Answer1:**
 
 ```sql
 WITH favorite_coffee AS(
@@ -17,7 +17,7 @@ FROM(
   PARTITION BY age
   ORDER BY num DESC) AS rank
   FROM favorite_coffee) t
-WHERE t.rank <= 5
+WHERE t.rank <= 3
 ORDER BY CASE age
 	WHEN '<18 years old' THEN 1
     WHEN '18-24 years old' THEN 2
@@ -29,6 +29,54 @@ ORDER BY CASE age
     ELSE 8
  END, num DESC
 ```
+
+**Answer2:**
+
+```sql
+WITH favorite_coffee AS(
+	SELECT age, favorite, COUNT(*) AS num
+	FROM Coffee
+	WHERE age != 'NA'
+	GROUP by age, favorite),
+
+top3 AS(
+  SELECT *, ROW_NUMBER() OVER (
+  PARTITION BY age
+  ORDER BY num DESC) AS rank
+  FROM favorite_coffee)
+
+SELECT age,  
+MAX(CASE when rank = 1 then favorite END) as top1,
+MAX(case when rank = 2 THEN favorite END) AS top2,
+MAX(case when rank = 3 THEN favorite END) AS top3
+FROM top3
+group by age
+ORDER BY CASE age
+	WHEN '<18 years old' THEN 1
+    WHEN '18-24 years old' THEN 2
+    WHEN '25-34 years old' THEN 3
+    WHEN '35-44 years old' THEN 4
+    WHEN '45-54 years old' THEN 5
+    WHEN '55-64 years old' THEN 6
+    WHEN '>65 years old' THEN 7
+    ELSE 8
+ END, num DESC
+```
+
+**Result**
+| age              | top1                 | top2      | top3                 |
+|------------------|----------------------|-----------|----------------------|
+| <18 years old    | Latte                | Pourover  | Regular drip coffee  |
+| 18-24 years old  | Pourover             | Latte     | Cortado              |
+| 25-34 years old  | Pourover             | Latte     | Regular drip coffee  |
+| 35-44 years old  | Pourover             | Latte     | Regular drip coffee  |
+| 45-54 years old  | Pourover             | Latte     | Regular drip coffee  |
+| 55-64 years old  | Regular drip coffee  | Pourover  | Latte                |
+| >65 years old    | Regular drip coffee  | Pourover  | Latte                |
+
+**Finds**
+-Preference towards Latte decreases with age
+-ラテに対する好みは年の増加とともに減ります
 
 **Notes:**
 - 文本类别要按语义顺序排 → ORDER BY CASE 列 WHEN ... THEN 数字 END(自定义排序)
