@@ -110,7 +110,7 @@ ORDER BY case age
 | >65 years old    | 141        | 95           | 1.48    |
 
 **Finds:**
-- People tend to intake more caffeine when they growing before they reach around 65 years old.
+- People tend to intake more caffeine when they get old before they reach around 65 years old.
 
 **Notes:**
 - 「CASE 映射前,先 SELECT DISTINCT 确认所有值都被覆盖,否则漏的变NULL被悄悄丢掉」
