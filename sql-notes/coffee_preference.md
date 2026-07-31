@@ -1,51 +1,55 @@
 # Analysis with Coffee Taste Test Survey Dataset
 
-## Analysis 1: Caffeine intake (equivalent_cups) by age group
+## Analysis 1: Caffeine intake (equivalent cups) by age group
 
-**Data cleaning:**
+**Data validation (one-time check before cleaning):**
 ```sql
 SELECT caffeine, COUNT(*) FROM Coffee GROUP BY caffeine;
 SELECT cups, COUNT(*) FROM Coffee GROUP BY cups;
-drop view if exists coffee_cleaned;
+```
 
-create VIew coffee_cleaned AS
-with cleaned AS (
-SELECT
-  age,
-  cups, 
-  case cups 
-  	when 'Less than 1' then 0
-    when 'More than 4' then 5
-    ELSE CAST(cups as real)
-    end as cleaned_cups,
-  caffeine, 
-  case caffeine
-    when 'Full caffeine' then 1 
-    when 'Half caff' then 0.5
-    when 'Decaf' then 0
-    end as caffeine_level
-FRom Coffee
-WHEre caffeine <>'NA' AND cups <> 'NA')
+**Data cleaning:**
+```sql
+DROP VIEW IF EXISTS coffee_cleaned;
 
-SELECT *, 
-	caffeine_level * cleaned_cups AS equivalent_cups,
-	ROUND(caffeine_level * cleaned_cups,0) AS equivalent_cups_group
-from cleaned;
+CREATE VIEW coffee_cleaned AS
+WITH cleaned AS (
+  SELECT
+    age,
+    cups,
+    CASE cups
+      WHEN 'Less than 1' THEN 0
+      WHEN 'More than 4' THEN 5
+      ELSE CAST(cups AS REAL)
+    END AS cleaned_cups,
+    caffeine,
+    CASE caffeine
+      WHEN 'Full caffeine' THEN 1
+      WHEN 'Half caff' THEN 0.5
+      WHEN 'Decaf' THEN 0
+    END AS caffeine_level
+  FROM Coffee
+  WHERE caffeine <> 'NA' AND cups <> 'NA'
+)
+SELECT *,
+  caffeine_level * cleaned_cups AS equivalent_cups,
+  ROUND(caffeine_level * cleaned_cups, 0) AS equivalent_cups_group
+FROM cleaned;
 ```
 
 **Notes:**
-- More than 4' is approximated as 5 and 'Less than 1' as 0 for quantification.
+- 'More than 4' is approximated as 5 and 'Less than 1' as 0 for quantification.
+- Confirmed from the validation step that `caffeine` and `cups` contain no valid values outside the CASE mapping.
 
-### Q1: Caffeine intake (equivalent_cups) and percentage of people
+### Q1: Caffeine intake (equivalent cups) and percentage of people
 
 **Answer:**
-
 ```sql
-SELECT equivalent_cups_group, 
-	   ROUND(count(*)*1.0/SUM(COUNT(*)) OVER (), 2)  as percentage
-From coffee_cleaned
-group by equivalent_cups_group
-order by equivalent_cups_group
+SELECT equivalent_cups_group,
+       ROUND(COUNT(*) * 1.0 / SUM(COUNT(*)) OVER (), 2) AS percentage
+FROM coffee_cleaned
+GROUP BY equivalent_cups_group
+ORDER BY equivalent_cups_group;
 ```
 
 | equivalent_cups_group | percentage |
@@ -60,19 +64,18 @@ order by equivalent_cups_group
 **Findings:**
 - Most people consume 1 or 2 equivalent cups per day.
 
-### Q2: Average Caffeine intake(equivalent_cups) by age group
+### Q2: Average caffeine intake (equivalent cups) by age group
 
 **Answer:**
-
 ```sql
 SELECT age,
-  SUM(equivalent_cups) as total_cups,
-  count(*) AS total_number,
-  ROUND(SUM(equivalent_cups)*1.0/count(*), 2) AS average
+       SUM(equivalent_cups) AS total_cups,
+       COUNT(*) AS total_number,
+       ROUND(SUM(equivalent_cups) * 1.0 / COUNT(*), 2) AS average
 FROM coffee_cleaned
 GROUP BY age
-ORDER BY case age
-	WHEN '<18 years old' THEN 1
+ORDER BY CASE age
+    WHEN '<18 years old' THEN 1
     WHEN '18-24 years old' THEN 2
     WHEN '25-34 years old' THEN 3
     WHEN '35-44 years old' THEN 4
@@ -80,7 +83,7 @@ ORDER BY case age
     WHEN '55-64 years old' THEN 6
     WHEN '>65 years old' THEN 7
     ELSE 8
- END
+  END;
 ```
 
 **Result:**
@@ -95,20 +98,19 @@ ORDER BY case age
 | >65 years old    | 189.5      | 92           | 2.06    |
 
 **Findings:**
-- caffeine intake tends to increase with age, peaking aroud 55–64 years old before slightly decreasing.
+- Caffeine intake tends to increase with age, peaking around 55–64 years old before slightly decreasing.
 - The average rises from 1.06 cups for under-18s to 2.11 for the 55–64 group.
 
-### Q3: For more details - Caffeine intake(equivalent_cups) and percentage by age group
+### Q3: For more detail — caffeine intake (equivalent cups) and percentage by age group
 
 **Answer:**
-
 ```sql
 SELECT age, equivalent_cups_group,
-  ROUND(COUNT(*) * 1.0 / SUM(COUNT(*)) OVER (PARTITION BY age), 2) AS percentage
+       ROUND(COUNT(*) * 1.0 / SUM(COUNT(*)) OVER (PARTITION BY age), 2) AS percentage
 FROM coffee_cleaned
 GROUP BY age, equivalent_cups_group
-ORDER BY case age
-	WHEN '<18 years old' THEN 1
+ORDER BY CASE age
+    WHEN '<18 years old' THEN 1
     WHEN '18-24 years old' THEN 2
     WHEN '25-34 years old' THEN 3
     WHEN '35-44 years old' THEN 4
@@ -116,25 +118,26 @@ ORDER BY case age
     WHEN '55-64 years old' THEN 6
     WHEN '>65 years old' THEN 7
     ELSE 8
- END
+  END;
 ```
 
-**Answer(before):**
-
+**Answer (earlier version, using JOIN instead of a window function):**
 ```sql
-SELECT t.age, equivalent_cups_group, s.num_sub, t.num_total, 
-ROUND(s.num_sub*1.0/t.num_total,2) AS percentage
-FROM(
-	SELECT age, COUNT(*) AS num_total
-	FROM coffee_adjusted 
-	GROUP BY age) t
-INNER join (
-  SELECT age, equivalent_cups_group, COUNT(*) AS num_sub
-  FROM coffee_adjusted
-  GROUP BY age,equivalent_cups_group) s
+SELECT t.age, s.equivalent_cups_group, s.num_sub, t.num_total,
+       ROUND(s.num_sub * 1.0 / t.num_total, 2) AS percentage
+FROM (
+    SELECT age, COUNT(*) AS num_total
+    FROM coffee_cleaned
+    GROUP BY age
+) t
+INNER JOIN (
+    SELECT age, equivalent_cups_group, COUNT(*) AS num_sub
+    FROM coffee_cleaned
+    GROUP BY age, equivalent_cups_group
+) s
 ON t.age = s.age
 ORDER BY CASE s.age
-	WHEN '<18 years old' THEN 1
+    WHEN '<18 years old' THEN 1
     WHEN '18-24 years old' THEN 2
     WHEN '25-34 years old' THEN 3
     WHEN '35-44 years old' THEN 4
@@ -142,10 +145,13 @@ ORDER BY CASE s.age
     WHEN '55-64 years old' THEN 6
     WHEN '>65 years old' THEN 7
     ELSE 8
- END
+  END;
 ```
 
 **Notes:**
+- Before mapping with CASE, run SELECT DISTINCT to confirm all values are covered — unlisted values silently become NULL and get dropped.
+- For within-group percentages, SUM(COUNT(*)) OVER (PARTITION BY group) is cleaner than a self-JOIN on subqueries.
+- JOIN type signals intent; when sources are equivalent, prefer INNER/LEFT over RIGHT to avoid confusing readers.
 - 「CASE 映射前,先 SELECT DISTINCT 确认所有值都被覆盖,否则漏的变NULL被悄悄丢掉」
 - 「算组内占比 → SUM(COUNT(*)) OVER (PARTITION BY 组),比 JOIN 子查询简洁」
 - 「JOIN 类型传递意图,同源等价时用 INNER/LEFT,别用 RIGHT 让人困惑」
