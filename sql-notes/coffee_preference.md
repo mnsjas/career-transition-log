@@ -1,10 +1,13 @@
 # Analysis with Coffee Taste Test Survey Dataset
 
-## Analysis 1: Caffeine intake(equivalent_cups) by age group
+## Analysis 1: Caffeine intake (equivalent_cups) by age group
 
-**Data cleansing:**
+**Data cleaning:**
 ```sql
+SELECT caffeine, COUNT(*) FROM Coffee GROUP BY caffeine;
+SELECT cups, COUNT(*) FROM Coffee GROUP BY cups;
 drop view if exists coffee_cleaned;
+
 create VIew coffee_cleaned AS
 with cleaned AS (
 SELECT
@@ -30,7 +33,10 @@ SELECT *,
 from cleaned;
 ```
 
-### Q1: Caffeine intake(equivalent_cups) and percentage of people
+**Notes:**
+- More than 4' is approximated as 5 and 'Less than 1' as 0 for quantification.
+
+### Q1: Caffeine intake (equivalent_cups) and percentage of people
 
 **Answer:**
 
@@ -51,8 +57,8 @@ order by equivalent_cups_group
 | 4 | 0.03 |
 | 5 | 0.02 |
 
-**Finds:**
-- Most people drink 1 or 2 cups a day.
+**Findings:**
+- Most people consume 1 or 2 equivalent cups per day.
 
 ### Q2: Average Caffeine intake(equivalent_cups) by age group
 
@@ -63,7 +69,7 @@ SELECT age,
   SUM(equivalent_cups) as total_cups,
   count(*) AS total_number,
   ROUND(SUM(equivalent_cups)*1.0/count(*), 2) AS average
-FROM coffee_adjusted
+FROM coffee_cleaned
 GROUP BY age
 ORDER BY case age
 	WHEN '<18 years old' THEN 1
@@ -88,8 +94,9 @@ ORDER BY case age
 | 55–64 years old  | 379        | 180          | 2.11    |
 | >65 years old    | 189.5      | 92           | 2.06    |
 
-**Finds:**
-- People tend to intake more caffeine when they get older until 65 years old.
+**Findings:**
+- caffeine intake tends to increase with age, peaking aroud 55–64 years old before slightly decreasing.
+- The average rises from 1.06 cups for under-18s to 2.11 for the 55–64 group.
 
 ### Q3: For more details - Caffeine intake(equivalent_cups) and percentage by age group
 
