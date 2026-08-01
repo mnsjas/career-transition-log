@@ -237,8 +237,6 @@ ORDER BY CASE age
 
 **Findings**
 - Preference towards Latte decreases with age.
-- Younger and under-18 groups show both a higher preference for latte and a higher rate of adding sugar/syrup.
-- Whether these are causally linked (e.g. a shared preference for less bitter coffee) cannot be determined from this data.
 
 ### Hypothesis: Do younger people prefer coffee which is smoother and less bitter?
 
@@ -276,6 +274,8 @@ order by case age
 
 **Findings:**
 - Sugar/syrup use is highest among under-18s, drops to a low around 25–34, then rises again through middle age.
+- Younger and under-18 groups show both a higher preference for latte and a higher rate of adding sugar/syrup.
+- Whether these are causally linked (e.g. a shared preference for less bitter coffee) cannot be determined from this data.
 
 **Notes:**
 - 文本类别要按语义顺序排 → ORDER BY CASE 列 WHEN ... THEN 数字 END(自定义排序)
