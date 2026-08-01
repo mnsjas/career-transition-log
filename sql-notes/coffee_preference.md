@@ -164,8 +164,8 @@ ORDER BY CASE s.age
 - For within-group percentages, SUM(COUNT(*)) OVER (PARTITION BY group) is cleaner than a self-JOIN on subqueries.
 - JOIN type signals intent; when sources are equivalent, prefer INNER/LEFT over RIGHT to avoid confusing readers.
 
-# Favorite coffee styles
-## Q1: Top3 Favorite coffee styles by age group
+# Analysis 2: Coffee preference by age group
+## Q1: Top3 Favorite coffee types by age group
 
 **Answer:**
 ```sql
@@ -236,7 +236,7 @@ ORDER BY CASE age
 ```
 
 **Findings**
-- Preference towards Latte decreases with age.
+- Younger people prefer Latte more than older people.
 
 ### Hypothesis: Do younger people prefer coffee which is smoother and less bitter?
 
@@ -281,25 +281,60 @@ order by case age
 - 文本类别要按语义顺序排 → ORDER BY CASE 列 WHEN ... THEN 数字 END(自定义排序)
 - Top N 分组排名 → RANK / DENSE_RANK / ROW_NUMBER 三选一,区别在怎么处理并列
 
+## Analysis 3: Coffee preference by races
 
-### Q2: Coffee preference (Favorite coffee styles, Roast level, Flavor, with or without sugar) by races
-
-**Answer1:**
-
+**Data validation and cleaning:**
 ```sql
-SELECT DISTINCT ethnicity_race 
-FROM  Coffee
+SELECT ethnicity_race, count(*) FROM Coffee group by ethnicity_race;
+SELECT ethnicity_race_s, count(*) FROM Coffee group by ethnicity_race_s;
 
-DROP TABLE IF EXISTS coffee_preferences;
-CREATE table coffee_preferences AS
-  SELECT favorite, sweetener, style, roast_level, ethnicity_race
+DROP VIEW IF EXISTS coffee_preferences;
+CREATE VIEW coffee_preferences AS
+  SELECT
+	ethnicity_race,
+	favorite,
+	additions,
+	case 
+    when additions like '%Flavor syrup%' then 'Y' 
+    when additions like '%Sugar or sweetener%' then 'Y'
+    else 'N' 
+    end as sugar_dummy,
+	style,
+    strength,
+	roast_level
   FROM Coffee
   WHERE ethnicity_race <>'NA';
 
-SELECT * 
-FROM coffee_preferences 
-LIMIT 20
+SELECT DISTINCT * FROM coffee_preferences LIMIT 50;
+```
 
+**Notes:**
+- The number of people who chose 'Other (please specify)' AS their `ethnicity_race` is very small(less than 3 people per race), so other races won't be analyzed in this report.
+
+### Q1: Favorite coffee types by races
+
+**Answer:**
+```sql
+WITH favorite_rank AS (
+SELECT 
+	ethnicity_race, 
+    favorite, 
+	ROW_NUMBER() OVER(
+      PARTITION BY ethnicity_race
+      ORDER BY num DESC) as rank
+FROM(SELECT ethnicity_race, favorite, COUNT(*) AS num
+  from coffee_preferences
+  group by ethnicity_race, favorite))
+
+SELECT ethnicity_race,
+	MAX(case when rank = 1 then favorite end) as first,
+    MAX(case when rank = 2 then favorite end) as second,
+	MAX(case when rank = 3 then favorite end) as third
+FROM favorite_rank
+group by ethnicity_race
+```
+**Answer (earlier version):**
+```sql
 with favorite_count AS (
   SELECT ethnicity_race, favorite, COUNT(*) AS num
   from coffee_preferences
@@ -329,34 +364,71 @@ AND r2.rank = 2
 and r3.rank = 3
 ```
 
-**Answer2:**
+| ethnicity_race | first | second | third |
+|---|---|---|---|
+| Asian/Pacific Islander | Pourover | Latte | Cappuccino |
+| Black/African American | Pourover | Latte | Cappuccino |
+| Hispanic/Latino | Pourover | Latte | Espresso |
+| Native American/Alaska Native | Latte | Mocha | Regular drip coffee |
+| Other (please specify) | Pourover | Latte | Cappuccino |
+| White/Caucasian | Pourover | Latte | Regular drip coffee |
 
-```sql
-with favorite_count AS (
-  SELECT ethnicity_race, favorite, COUNT(*) AS num
-  from coffee_preferences
-  group by ethnicity_race, favorite),
-
-favorite_rank AS (
-SELECT 
-	ethnicity_race, 
-    favorite, 
-	ROW_NUMBER() OVER(
-      PARTITION BY ethnicity_race
-      ORDER BY num DESC) as rank
-FROM favorite_count)
-
-SELECT ethnicity_race,
-	MAX(case when rank = 1 then favorite end) as first,
-    MAX(case when rank = 2 then favorite end) as second,
-	MAX(case when rank = 3 then favorite end) as third
-FROM favorite_rank
-group by ethnicity_race
-```
+**Findings:**
+- Pourover and Latte are the top2 favorite coffee styles for all the races except Native American/Alaska Native, whose favorate coffee styles are Latte and Mocha.
 
 **Notes:**
-- CREATE TABLE の文末に ; を付けて、次の SELECT を別のSQL文として実行します
 - GROUP BY の不足に気を付けろ
 - 同じSELECT句で付けた別名を参照できないので、CTEを使おう
 - SQLの実行順序はFROM、WHERE、GROUP BY、集約関数、SELECT、ウィンドウ関数（ROW_NUMBER() や RANK()）、ORDER BY
 - 取组内Top-N并排成列:自连接会在凑不齐N个时静默丢整组;条件聚合 MAX(CASE WHEN rank=n) 会保留行、缺的显示NULL —— 后者更安全
+
+### Q2: Favorite conbination (favorite strength, roast level, Flavor) by races
+
+**Answer:**
+```sql
+with strength_cte as (
+  SELECT ethnicity_race, strength,
+	ROW_NUMBER() OVER (PARTITION BY ethnicity_race order by strength_num DESC) as strength_rank
+  FROM(
+    select ethnicity_race, strength, COUNT(*) AS strength_num
+    from coffee_preferences
+    GROUP by ethnicity_race, strength)
+  ),
+style_cte as (
+  SELECT ethnicity_race, style,
+	ROW_NUMBER() OVER (PARTITION BY ethnicity_race order by style_num DESC) as style_rank
+  FROM(
+    select ethnicity_race, style, COUNT(*) AS style_num
+    from coffee_preferences
+    GROUP by ethnicity_race, style)
+  ),
+roast_level_cte AS(
+  SELECT ethnicity_race, roast_level,
+	ROW_NUMBER() OVER (PARTITION BY ethnicity_race order by roast_level_num DESC) as roast_level_rank
+  FROM(
+    select ethnicity_race, roast_level, COUNT(*) AS roast_level_num
+    from coffee_preferences
+    GROUP by ethnicity_race, roast_level)
+  )
+select st.ethnicity_race, st.strength, s.style, r.roast_level
+FROM strength_cte st
+INNER JOIN style_cte s ON st.ethnicity_race = s.ethnicity_race
+INNER JOIN roast_level_cte r ON st.ethnicity_race = r.ethnicity_race
+WHERE st.strength_rank = 1
+  AND s.style_rank = 1
+  AND r.roast_level_rank = 1;
+```
+
+| ethnicity_race | strength | style | roast_level |
+|---|---|---|---|
+| Asian/Pacific Islander | Somewhat strong | Fruity | Light |
+| Black/African American | Medium | Sweet | Medium |
+| Hispanic/Latino | Medium | Chocolatey | Medium |
+| Native American/Alaska Native | Somewhat strong | Bold | Dark |
+| Other (please specify) | Somewhat strong | Fruity | Light |
+| White/Caucasian | Somewhat strong | Fruity | Light |
+
+**Findings:**
+- Different races have different preference for style and roast_level.
+- This result could be helpful is someone are going to open a coffee store targeting certain races.
+- For example: if I want to open a store at an area with many Asian tourist, I will prepare coffee with fruity and light taste. 
