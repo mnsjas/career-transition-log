@@ -9,6 +9,8 @@ conditional aggregation.
 **Skills demonstrated:** data cleaning with VIEWs, window functions
 (ROW_NUMBER, SUM OVER), conditional aggregation, hypothesis testing.
 
+## Analysis 1: Caffeine intake (equivalent cups) by age group
+
 **Data validation:**
 ```sql
 SELECT caffeine, COUNT(*) FROM Coffee GROUP BY caffeine;
@@ -59,8 +61,6 @@ SELECT * FROM coffee_cleaned;
 **Notes:**
 - `More than 4` is approximated as `5` and `Less than 1` as `0` for quantification.
 - Confirmed from the validation step that `caffeine` and `cups` contain no valid values outside the CASE mapping.
-
-## Analysis 1: Caffeine intake (equivalent cups) by age group
 
 ### Q1: Caffeine intake (equivalent cups) and percentage of people
 
