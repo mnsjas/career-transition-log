@@ -1,11 +1,10 @@
 # Analysis with Coffee Taste Test Survey Dataset
 
-## Analysis 1: Caffeine intake (equivalent cups) by age group
-
-**Data validation (one-time check before cleaning):**
+**Data validation:**
 ```sql
 SELECT caffeine, COUNT(*) FROM Coffee GROUP BY caffeine;
 SELECT cups, COUNT(*) FROM Coffee GROUP BY cups;
+SELECT additions, COUNT(*) FROM Coffee GROUP BY additions;
 ```
 
 **Data cleaning:**
@@ -27,19 +26,32 @@ WITH cleaned AS (
       WHEN 'Full caffeine' THEN 1
       WHEN 'Half caff' THEN 0.5
       WHEN 'Decaf' THEN 0
-    END AS caffeine_level
+    END AS caffeine_level,
+    additions,
+    case 
+    when additions like '%Flavor syrup%' then 'Y' 
+    when additions like '%Sugar or sweetener%' then 'Y'
+    else 'N' 
+    end as sugar_dummy
   FROM Coffee
-  WHERE caffeine <> 'NA' AND cups <> 'NA'
+  WHERE age <> 'NA'
+  AND cups <> 'NA'
+  AND caffeine <> 'NA'
+  AND additions <> 'NA'
 )
 SELECT *,
   caffeine_level * cleaned_cups AS equivalent_cups,
   ROUND(caffeine_level * cleaned_cups, 0) AS equivalent_cups_group
 FROM cleaned;
+
+SELECT * from coffee_cleaned
 ```
 
 **Notes:**
 - 'More than 4' is approximated as 5 and 'Less than 1' as 0 for quantification.
 - Confirmed from the validation step that `caffeine` and `cups` contain no valid values outside the CASE mapping.
+
+## Analysis 1: Caffeine intake (equivalent cups) by age group
 
 ### Q1: Caffeine intake (equivalent cups) and percentage of people
 
@@ -86,7 +98,6 @@ ORDER BY CASE age
   END;
 ```
 
-**Result:**
 | age              | total_cups | total_number | average |
 |------------------|-----------:|-------------:|--------:|
 | <18 years old    | 18         | 17           | 1.06    |
@@ -152,15 +163,52 @@ ORDER BY CASE s.age
 - Before mapping with CASE, run SELECT DISTINCT to confirm all values are covered — unlisted values silently become NULL and get dropped.
 - For within-group percentages, SUM(COUNT(*)) OVER (PARTITION BY group) is cleaner than a self-JOIN on subqueries.
 - JOIN type signals intent; when sources are equivalent, prefer INNER/LEFT over RIGHT to avoid confusing readers.
-- 「CASE 映射前,先 SELECT DISTINCT 确认所有值都被覆盖,否则漏的变NULL被悄悄丢掉」
-- 「算组内占比 → SUM(COUNT(*)) OVER (PARTITION BY 组),比 JOIN 子查询简洁」
-- 「JOIN 类型传递意图,同源等价时用 INNER/LEFT,别用 RIGHT 让人困惑」
 
 # Favorite coffee styles
-## Q1: Top3 Favotate coffee styles by age group
+## Q1: Top3 Favorite coffee styles by age group
 
-**Answer1:**
+**Answer:**
+```sql
+WITH favorite_coffee AS(
+	SELECT age, favorite, COUNT(*) AS num
+	FROM Coffee
+	WHERE age != 'NA'
+	GROUP by age, favorite),
 
+top3 AS(
+  SELECT *, ROW_NUMBER() OVER (
+  PARTITION BY age) AS rank
+  FROM favorite_coffee)
+
+SELECT age,  
+MAX(CASE when rank = 1 then favorite END) as top1,
+MAX(case when rank = 2 THEN favorite END) AS top2,
+MAX(case when rank = 3 THEN favorite END) AS top3
+FROM top3
+group by age
+ORDER BY CASE age
+	WHEN '<18 years old' THEN 1
+    WHEN '18-24 years old' THEN 2
+    WHEN '25-34 years old' THEN 3
+    WHEN '35-44 years old' THEN 4
+    WHEN '45-54 years old' THEN 5
+    WHEN '55-64 years old' THEN 6
+    WHEN '>65 years old' THEN 7
+    ELSE 8
+ END, num DESC
+```
+
+| age              | top1                 | top2      | top3                 |
+|------------------|----------------------|-----------|----------------------|
+| <18 years old    | Latte                | Pourover  | Regular drip coffee  |
+| 18-24 years old  | Pourover             | Latte     | Cortado              |
+| 25-34 years old  | Pourover             | Latte     | Regular drip coffee  |
+| 35-44 years old  | Pourover             | Latte     | Regular drip coffee  |
+| 45-54 years old  | Pourover             | Latte     | Regular drip coffee  |
+| 55-64 years old  | Regular drip coffee  | Pourover  | Latte                |
+| >65 years old    | Regular drip coffee  | Pourover  | Latte                |
+
+**Answer (earlier version):**
 ```sql
 WITH favorite_coffee AS(
 SELECT age, favorite, COUNT(*) AS num
@@ -187,28 +235,24 @@ ORDER BY CASE age
  END, num DESC
 ```
 
-**Answer2:**
+**Findings**
+- Preference towards Latte decreases with age.
+- Younger and under-18 groups show both a higher preference for latte and a higher rate of adding sugar/syrup.
+- Whether these are causally linked (e.g. a shared preference for less bitter coffee) cannot be determined from this data.
 
+### Hypothesis: Do younger people prefer coffee which is smoother and less bitter?
+
+**Answer:**
 ```sql
-WITH favorite_coffee AS(
-	SELECT age, favorite, COUNT(*) AS num
-	FROM Coffee
-	WHERE age != 'NA'
-	GROUP by age, favorite),
-
-top3 AS(
-  SELECT *, ROW_NUMBER() OVER (
-  PARTITION BY age
-  ORDER BY num DESC) AS rank
-  FROM favorite_coffee)
-
-SELECT age,  
-MAX(CASE when rank = 1 then favorite END) as top1,
-MAX(case when rank = 2 THEN favorite END) AS top2,
-MAX(case when rank = 3 THEN favorite END) AS top3
-FROM top3
-group by age
-ORDER BY CASE age
+SELECT age, 
+MAX(case when sugar_dummy = 'Y' then percentage end) as with_sugar,
+MAX(case when sugar_dummy = 'N' then percentage end) as without_sugar
+FROM (
+SELECT age, sugar_dummy, ROUND(count(*)*1.0/SUM(count(*)) OVER (PARTITION BY age),2) as percentage
+from coffee_cleaned
+GROUP by age, sugar_dummy)
+group by  age
+order by case age
 	WHEN '<18 years old' THEN 1
     WHEN '18-24 years old' THEN 2
     WHEN '25-34 years old' THEN 3
@@ -217,31 +261,31 @@ ORDER BY CASE age
     WHEN '55-64 years old' THEN 6
     WHEN '>65 years old' THEN 7
     ELSE 8
- END, num DESC
+  END
 ```
 
-**Result**
-| age              | top1                 | top2      | top3                 |
-|------------------|----------------------|-----------|----------------------|
-| <18 years old    | Latte                | Pourover  | Regular drip coffee  |
-| 18-24 years old  | Pourover             | Latte     | Cortado              |
-| 25-34 years old  | Pourover             | Latte     | Regular drip coffee  |
-| 35-44 years old  | Pourover             | Latte     | Regular drip coffee  |
-| 45-54 years old  | Pourover             | Latte     | Regular drip coffee  |
-| 55-64 years old  | Regular drip coffee  | Pourover  | Latte                |
-| >65 years old    | Regular drip coffee  | Pourover  | Latte                |
+| age | with_sugar | without_sugar |
+|---|---|---|
+| <18 years old | 0.53 | 0.47 |
+| 18-24 years old | 0.24 | 0.76 |
+| 25-34 years old | 0.14 | 0.86 |
+| 35-44 years old | 0.15 | 0.85 |
+| 45-54 years old | 0.19 | 0.81 |
+| 55-64 years old | 0.23 | 0.77 |
+| >65 years old | 0.14 | 0.86 |
 
-**Finds**
-- Preference towards Latte decreases with age
-- ラテに対する好みは年の増加とともに減ります
+**Findings:**
+- Sugar/syrup use is highest among under-18s, drops to a low around 25–34, then rises again through middle age.
 
 **Notes:**
 - 文本类别要按语义顺序排 → ORDER BY CASE 列 WHEN ... THEN 数字 END(自定义排序)
 - Top N 分组排名 → RANK / DENSE_RANK / ROW_NUMBER 三选一,区别在怎么处理并列
 
-### Q3: Coffee preference (Favorite coffee styles, Roast level, Flavor, with or without suger) by races
+
+### Q2: Coffee preference (Favorite coffee styles, Roast level, Flavor, with or without sugar) by races
 
 **Answer1:**
+
 ```sql
 SELECT DISTINCT ethnicity_race 
 FROM  Coffee
