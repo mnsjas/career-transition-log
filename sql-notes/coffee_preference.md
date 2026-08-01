@@ -159,11 +159,6 @@ ORDER BY CASE s.age
   END;
 ```
 
-**Notes:**
-- Before mapping with CASE, run SELECT DISTINCT to confirm all values are covered — unlisted values silently become NULL and get dropped.
-- For within-group percentages, SUM(COUNT(*)) OVER (PARTITION BY group) is cleaner than a self-JOIN on subqueries.
-- JOIN type signals intent; when sources are equivalent, prefer INNER/LEFT over RIGHT to avoid confusing readers.
-
 # Analysis 2: Coffee preference by age group
 ## Q1: Top3 Favorite coffee types by age group
 
@@ -177,7 +172,8 @@ WITH favorite_coffee AS(
 
 top3 AS(
   SELECT *, ROW_NUMBER() OVER (
-  PARTITION BY age) AS rank
+  PARTITION BY age
+  ORDER BY num DESC) AS rank
   FROM favorite_coffee)
 
 SELECT age,  
@@ -195,7 +191,7 @@ ORDER BY CASE age
     WHEN '55-64 years old' THEN 6
     WHEN '>65 years old' THEN 7
     ELSE 8
- END, num DESC
+ END
 ```
 
 | age              | top1                 | top2      | top3                 |
@@ -276,10 +272,6 @@ order by case age
 - Sugar/syrup use is highest among under-18s, drops to a low around 25–34, then rises again through middle age.
 - Younger and under-18 groups show both a higher preference for latte and a higher rate of adding sugar/syrup.
 - Whether these are causally linked (e.g. a shared preference for less bitter coffee) cannot be determined from this data.
-
-**Notes:**
-- 文本类别要按语义顺序排 → ORDER BY CASE 列 WHEN ... THEN 数字 END(自定义排序)
-- Top N 分组排名 → RANK / DENSE_RANK / ROW_NUMBER 三选一,区别在怎么处理并列
 
 ## Analysis 3: Coffee preference by races
 
@@ -374,15 +366,9 @@ and r3.rank = 3
 | White/Caucasian | Pourover | Latte | Regular drip coffee |
 
 **Findings:**
-- Pourover and Latte are the top2 favorite coffee styles for all the races except Native American/Alaska Native, whose favorate coffee styles are Latte and Mocha.
+- Pourover and Latte are the top2 favorite coffee styles for all the races except Native American/Alaska Native, whose favorite coffee styles are Latte and Mocha.
 
-**Notes:**
-- GROUP BY の不足に気を付けろ
-- 同じSELECT句で付けた別名を参照できないので、CTEを使おう
-- SQLの実行順序はFROM、WHERE、GROUP BY、集約関数、SELECT、ウィンドウ関数（ROW_NUMBER() や RANK()）、ORDER BY
-- 取组内Top-N并排成列:自连接会在凑不齐N个时静默丢整组;条件聚合 MAX(CASE WHEN rank=n) 会保留行、缺的显示NULL —— 后者更安全
-
-### Q2: Favorite conbination (favorite strength, roast level, Flavor) by races
+### Q2: Most popular strength, style, and roast level independently by race
 
 **Answer:**
 ```sql
@@ -430,5 +416,5 @@ WHERE st.strength_rank = 1
 
 **Findings:**
 - Different races have different preference for style and roast_level.
-- This result could be helpful is someone are going to open a coffee store targeting certain races.
-- For example: if I want to open a store at an area with many Asian tourist, I will prepare coffee with fruity and light taste. 
+- This result could be helpful if someone is going to open a coffee store targeting a specific demographic.
+- For example: if I want to open a store at an area with many Asian tourists, I will prepare coffee with fruity and light and somewhat strong taste, assuming the survey sample is representative.
