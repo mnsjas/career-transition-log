@@ -1,5 +1,14 @@
 # Analysis with Coffee Taste Test Survey Dataset
 
+## Overview
+This analysis explores caffeine consumption and coffee preferences using the
+Coffee Taste Test Survey dataset (~4,000 responses). It examines patterns by
+age group and ethnicity, using SQL (SQLite) with CTEs, window functions, and
+conditional aggregation.
+
+**Skills demonstrated:** data cleaning with VIEWs, window functions
+(ROW_NUMBER, SUM OVER), conditional aggregation, hypothesis testing.
+
 **Data validation:**
 ```sql
 SELECT caffeine, COUNT(*) FROM Coffee GROUP BY caffeine;
@@ -159,8 +168,8 @@ ORDER BY CASE s.age
   END;
 ```
 
-# Analysis 2: Coffee preference by age group
-## Q1: Top3 Favorite coffee types by age group
+## Analysis 2: Coffee preference by age group
+### Q1: Top3 Favorite coffee types by age group
 
 **Answer:**
 ```sql
@@ -234,7 +243,7 @@ ORDER BY CASE age
   END, num DESC;
 ```
 
-**Findings**
+**Findings:**
 - Younger people prefer `Latte` more than older people.
 
 ### Hypothesis: Do younger people prefer coffee which is smoother and less bitter?
@@ -305,7 +314,7 @@ SELECT DISTINCT * FROM coffee_preferences LIMIT 50;
 ```
 
 **Notes:**
-- The number of people who chose `Other (please specify)` AS their `ethnicity_race` is very small(less than 3 people per race), so other races won't be analyzed in this report.
+- The number of people who chose `Other (please specify)` as their `ethnicity_race` is very small (less than 3 people per race), so other races won't be analyzed in this report.
 
 ### Q1: Favorite coffee types by races
 
@@ -375,7 +384,7 @@ WHERE r1.rank = 1
 | White/Caucasian | Pourover | Latte | Regular drip coffee |
 
 **Findings:**
-- `Pourover` and `Latte` are the top2 favorite coffee styles for all the races except `Native American/Alaska Native`, whose favorite coffee styles are `Latte` and `Mocha`.
+- `Pourover` and `Latte` are the top2 favorite coffee types for all the races except `Native American/Alaska Native`, whose favorite coffee styles are `Latte` and `Mocha`.
 
 ### Q2: Most popular strength, style, and roast level independently by race
 
