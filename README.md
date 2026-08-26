@@ -5,8 +5,8 @@ PMO → Data Analyst / Analytics Engineer, documenting the process in public.
 **Timeline:** Jul 2026 – Jan 2027 (26 weeks)
 
 ## Progress
-- [X] Week 1–4: SQL + Statistics
-- [ ] Week 5–8: Python (pandas) + first EDA project
+- [X] Week 1–4: SQL + Statistics (July 9th to August 5th)
+- [X] Week 5–8: Python (pandas) + first EDA project (August 6th to August 26th)
 - [ ] Week 9–13: Data storytelling + 統計検定2級
 - [ ] Week 14–26: Job search + portfolio
 
@@ -14,9 +14,46 @@ PMO → Data Analyst / Analytics Engineer, documenting the process in public.
 
 ## Monthly Review
 
-### Week 1–4
+### Week 1–4 
 
-**最容易拖延的任务**
-- 对于一些我不知道该怎么做的事情我容易拖延。例如如何创建仓库，写Readme
-- 对于一些需要自由发挥的事情我会拖延。例如对于窗口函数写自己的例子，用SQL写查询回答问题等等(但一旦我熟悉了这件事就变得不那么困难，我可能是害怕迈出第一步)
-- 对进度不明确的事情我容易拖延。例如统计相关的知识的学习，因为我有一些基础，所以我认为从头看『統計学の時間』BellCurve有点浪费时间，多以反而不知从何下手。但是我最后决定直接开始做习题，遇到不懂的再去学习，这样要做的事情变得明确，我就不那么拖延了
+**How I work:** 
+
+Turning vague tasks into concrete next steps
+
+Through this transition I've learned a lot about how I work most effectively —
+and built habits around it:
+
+- **I break ambiguous work into a concrete first action.** Open-ended tasks
+  (e.g. "study statistics" or "write my own examples") used to feel hard to
+  start. I found that the blocker was almost always an unclear next step — so I
+  now begin with something small and concrete (e.g. "do practice problem 1")
+  rather than trying to plan the whole thing first. Momentum follows.
+
+- **I learn by doing, then fill gaps as they appear.** Instead of working
+  through material front-to-back, I start with hands-on problems and look things
+  up when I get stuck. This keeps the work concrete and moving.
+
+- **I reflect regularly on my own process** and adjust my approach based on what
+  I notice — treating how I work as something to iterate on, the same way I'd
+  iterate on an analysis.
+
+### Week 5-8
+
+**Mental Health in Tech — Exploratory Analysis**
+
+Exploring the OSMI Mental Health in Tech Survey with pandas: whether seeking
+mental-health treatment varies by industry, country, and gender.
+
+**Key point:** 
+
+the data measures *treatment-seeking*, not illness prevalence —
+conclusions are framed accordingly.
+
+**Tools:** 
+
+Python, pandas, seaborn. 
+
+**Skills:** 
+
+data cleaning (50+ raw gender
+values → standardized), groupby aggregation, boolean-to-percentage, visualization.
