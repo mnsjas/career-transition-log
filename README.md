@@ -14,8 +14,6 @@ PMO → Data Analyst / Analytics Engineer, documenting the process in public.
 
 ## Monthly Review
 
----
-
 ### Week 1–4 
 
 **How I work:** 
