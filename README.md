@@ -7,12 +7,14 @@ PMO → Data Analyst / Analytics Engineer, documenting the process in public.
 ## Progress
 - [X] Week 1–4: SQL + Statistics (July 9th to August 5th)
 - [X] Week 5–8: Python (pandas) + first EDA project (August 6th to August 26th)
-- [ ] Week 9–13: Data storytelling + 統計検定2級
+- [X] Week 9–13: Data storytelling + 統計検定2級 (August 27th yo October 31st)
 - [ ] Week 14–26: Job search + portfolio
 
 *Started: July 9th 2026*
 
 ## Monthly Review
+
+---
 
 ### Week 1–4 
 
@@ -37,6 +39,8 @@ and built habits around it:
   I notice — treating how I work as something to iterate on, the same way I'd
   iterate on an analysis.
 
+---
+
 ### Week 5-8
 
 **Mental Health in Tech — Exploratory Analysis**
@@ -57,3 +61,46 @@ Python, pandas, seaborn.
 
 data cleaning (50+ raw gender
 values → standardized), groupby aggregation, boolean-to-percentage, visualization.
+
+### Week 9–13
+
+## 📊 Project: Testing the Lipstick Effect — Economic Cycles and Cinema Demand
+
+**Overview**
+An analysis testing whether the "lipstick effect" — the idea that people spend
+more on small affordable pleasures during downturns — applies to cinema demand
+in Japan. Box-office statistics from the Motion Picture Producers Association of
+Japan (1955–2025) were combined with economic indicators including real GDP and
+the Consumer Confidence Index.
+
+**Findings**
+The hypothesis was not supported. While raw values showed a positive correlation
+between the economy and cinema demand, that correlation disappeared once tested
+on year-over-year changes — revealing it to be a spurious correlation driven by a
+shared time trend. Instead, cinema demand appears to be shaped far more by
+structural factors, such as the spread of television and streaming services, than
+by economic cycles.
+
+**Tech Stack**
+`Python` `pandas` `matplotlib` `statsmodels`
+
+**Methods**
+- Joining and cleaning multiple data sources (reconciling different periods,
+  frequencies, and base years)
+- Time-series visualization (dual-axis charts)
+- Simple linear regression (OLS)
+- Multi-angle testing: raw values, growth rates, and lagged effects
+- Checking for spurious correlation driven by time trends
+- Robustness check via outlier removal
+
+🔗 [View the analysis notebook](./path-to-notebook)
+
+---
+
+## 🎓 Certifications
+
+- **Statistics Test Level 2 (統計検定2級)** — Japan Statistical Society, Oct 2026
+  Covers descriptive and inferential statistics, probability distributions,
+  hypothesis testing, and regression analysis.
+
+---
