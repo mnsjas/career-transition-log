@@ -60,9 +60,11 @@ Python, pandas, seaborn.
 data cleaning (50+ raw gender
 values → standardized), groupby aggregation, boolean-to-percentage, visualization.
 
+---
+
 ### Week 9–13
 
-## 📊 Project: Testing the Lipstick Effect — Economic Cycles and Cinema Demand
+**📊 Project: Testing the Lipstick Effect — Economic Cycles and Cinema Demand**
 
 **Overview**
 An analysis testing whether the "lipstick effect" — the idea that people spend
@@ -91,14 +93,8 @@ by economic cycles.
 - Checking for spurious correlation driven by time trends
 - Robustness check via outlier removal
 
-🔗 [View the analysis notebook](./path-to-notebook)
-
----
-
-## 🎓 Certifications
+**🎓 Certifications**
 
 - **Statistics Test Level 2 (統計検定2級)** — Japan Statistical Society, Oct 2026
   Covers descriptive and inferential statistics, probability distributions,
   hypothesis testing, and regression analysis.
-
----
