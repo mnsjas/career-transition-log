@@ -6,8 +6,6 @@ clear, honest analysis. Based in Tokyo. Trilingual: Chinese / Japanese / English
 
 📫 mnsjas.q@gmail.com
 
----
-
 ## Skills
 
 **Languages & Tools**
@@ -24,17 +22,15 @@ clear, honest analysis. Based in Tokyo. Trilingual: Chinese / Japanese / English
   framing findings honestly (stating what the data can and cannot show)
 
 **Spoken Languages**
-Chinese (native) · Japanese (business) · English (business)
-
----
+ - Chinese (native)
+ - Japanese (business, JLPT N1) 
+ - English (business, TOEIC 925)
 
 ## Certifications
 
 - **Statistics Test Level 2 (統計検定2級)** — Japan Statistical Society, Oct 2026
   Covers descriptive & inferential statistics, probability distributions,
   hypothesis testing, and regression analysis.
-
----
 
 ## Projects
 
@@ -72,8 +68,6 @@ Methods: data cleaning (50+ raw gender values → standardized) · groupby
 aggregation · boolean-to-percentage rates · visualization
 
 🔗 [View notebook](./path-to-notebook)
-
----
 
 ## How I work
 
