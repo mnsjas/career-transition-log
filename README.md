@@ -55,20 +55,6 @@ analysis · spurious-correlation testing · robustness check (outlier removal)
 
 ---
 
-### 📊 Mental Health in Tech — Exploratory Analysis
-
-An exploratory analysis of the OSMI Mental Health in Tech Survey: how
-treatment-seeking varies by industry, country, and gender.
-
-**Key framing:** the data measures *treatment-seeking*, not illness prevalence —
-conclusions are scoped accordingly.
-
-`Python` · `pandas` · `seaborn`
-Methods: data cleaning (50+ raw gender values → standardized) · groupby
-aggregation · boolean-to-percentage rates · visualization
-
-🔗 [View notebook](./path-to-notebook)
-
 ## How I work
 
 A note on my working style, since it shapes how I approach analysis:
