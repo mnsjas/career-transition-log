@@ -53,8 +53,6 @@ analysis · spurious-correlation testing · robustness check (outlier removal)
 
 🔗 [View notebook](./path-to-notebook)
 
----
-
 ## How I work
 
 A note on my working style, since it shapes how I approach analysis:
